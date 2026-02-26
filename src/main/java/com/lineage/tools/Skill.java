@@ -1,133 +1,336 @@
 package com.lineage.tools;
 
 import javax.xml.bind.annotation.*;
+import java.util.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "skill")
 public class Skill {
     
-    @XmlElement(name = "skill_id")
+    @XmlAttribute(name = "id")
     private int skillId;
     
-    @XmlElement
-    private int level;
+    @XmlAttribute(name = "levels")
+    private int levels;
     
-    @XmlElement
+    @XmlAttribute(name = "name")
     private String name;
     
-    @XmlElement(name = "operate_type")
-    private String operateType;
+    @XmlAttribute(name = "enchantGroup1")
+    private String enchantGroup1;
     
-    @XmlElement(name = "magic_level")
-    private int magicLevel;
+    @XmlAttribute(name = "enchantGroup2")
+    private String enchantGroup2;
     
-    @XmlElement(name = "mp_consume")
-    private int mpConsume;
+    @XmlAttribute(name = "enchantGroup3")
+    private String enchantGroup3;
     
-    @XmlElement(name = "hp_consume")
-    private int hpConsume;
+    @XmlAttribute(name = "enchantGroup4")
+    private String enchantGroup4;
     
-    @XmlElement(name = "item_consume")
-    private int itemConsume;
+    @XmlElement(name = "set")
+    private List<SkillSet> sets = new ArrayList<>();
     
-    @XmlElement(name = "cast_range")
-    private int castRange;
+    @XmlElement(name = "table")
+    private List<SkillTable> tables = new ArrayList<>();
     
-    @XmlElement(name = "effect_range")
-    private int effectRange;
+    @XmlElement(name = "conditions")
+    private SkillConditions conditions;
     
-    @XmlElement(name = "skill_time")
-    private int skillTime;
+    @XmlElement(name = "effects")
+    private SkillEffects effects;
     
-    @XmlElement(name = "reuse_delay")
-    private int reuseDelay;
-    
-    @XmlElement
-    private int attribute;
-    
-    @XmlElement
-    private String target;
-    
-    @XmlElement(name = "skill_type")
-    private String skillType;
-    
-    @XmlElement(name = "magic_critical")
-    private boolean magicCritical;
-
-    // Construtores
+    // Construtor padrão
     public Skill() {}
-
-    public Skill(int skillId, int level, String name) {
-        this.skillId = skillId;
-        this.level = level;
-        this.name = name;
-        // Valores padrão
-        this.operateType = "OP_ACTIVE";
-        this.magicLevel = 1;
-        this.mpConsume = 10;
-        this.hpConsume = 0;
-        this.itemConsume = 0;
-        this.castRange = 400;
-        this.effectRange = 900;
-        this.skillTime = 10;
-        this.reuseDelay = 5000;
-        this.attribute = 0;
-        this.target = "target_one";
-        this.skillType = "BUFF";
-        this.magicCritical = false;
-    }
-
+    
     // Getters e Setters
     public int getSkillId() { return skillId; }
     public void setSkillId(int skillId) { this.skillId = skillId; }
     
-    public int getLevel() { return level; }
-    public void setLevel(int level) { this.level = level; }
+    public int getLevels() { return levels; }
+    public void setLevels(int levels) { this.levels = levels; }
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     
-    public String getOperateType() { return operateType; }
-    public void setOperateType(String operateType) { this.operateType = operateType; }
+    public String getEnchantGroup1() { return enchantGroup1; }
+    public void setEnchantGroup1(String enchantGroup1) { this.enchantGroup1 = enchantGroup1; }
     
-    public int getMagicLevel() { return magicLevel; }
-    public void setMagicLevel(int magicLevel) { this.magicLevel = magicLevel; }
+    public String getEnchantGroup2() { return enchantGroup2; }
+    public void setEnchantGroup2(String enchantGroup2) { this.enchantGroup2 = enchantGroup2; }
     
-    public int getMpConsume() { return mpConsume; }
-    public void setMpConsume(int mpConsume) { this.mpConsume = mpConsume; }
+    public String getEnchantGroup3() { return enchantGroup3; }
+    public void setEnchantGroup3(String enchantGroup3) { this.enchantGroup3 = enchantGroup3; }
     
-    public int getHpConsume() { return hpConsume; }
-    public void setHpConsume(int hpConsume) { this.hpConsume = hpConsume; }
+    public String getEnchantGroup4() { return enchantGroup4; }
+    public void setEnchantGroup4(String enchantGroup4) { this.enchantGroup4 = enchantGroup4; }
     
-    public int getItemConsume() { return itemConsume; }
-    public void setItemConsume(int itemConsume) { this.itemConsume = itemConsume; }
+    public List<SkillSet> getSets() { return sets; }
+    public void setSets(List<SkillSet> sets) { this.sets = sets; }
     
-    public int getCastRange() { return castRange; }
-    public void setCastRange(int castRange) { this.castRange = castRange; }
+    public List<SkillTable> getTables() { return tables; }
+    public void setTables(List<SkillTable> tables) { this.tables = tables; }
     
-    public int getEffectRange() { return effectRange; }
-    public void setEffectRange(int effectRange) { this.effectRange = effectRange; }
+    public SkillConditions getConditions() { return conditions; }
+    public void setConditions(SkillConditions conditions) { this.conditions = conditions; }
     
-    public int getSkillTime() { return skillTime; }
-    public void setSkillTime(int skillTime) { this.skillTime = skillTime; }
+    public SkillEffects getEffects() { return effects; }
+    public void setEffects(SkillEffects effects) { this.effects = effects; }
     
-    public int getReuseDelay() { return reuseDelay; }
-    public void setReuseDelay(int reuseDelay) { this.reuseDelay = reuseDelay; }
+    // Método auxiliar para pegar valor de um set específico
+    public String getSetValue(String setName) {
+        return sets.stream()
+                .filter(s -> s.getName().equals(setName))
+                .map(SkillSet::getVal)
+                .findFirst()
+                .orElse(null);
+    }
     
-    public int getAttribute() { return attribute; }
-    public void setAttribute(int attribute) { this.attribute = attribute; }
+    // Método auxiliar para pegar tabela específica
+    public SkillTable getTable(String tableName) {
+        return tables.stream()
+                .filter(t -> t.getName().equals(tableName))
+                .findFirst()
+                .orElse(null);
+    }
     
-    public String getTarget() { return target; }
-    public void setTarget(String target) { this.target = target; }
-    
-    public String getSkillType() { return skillType; }
-    public void setSkillType(String skillType) { this.skillType = skillType; }
-    
-    public boolean isMagicCritical() { return magicCritical; }
-    public void setMagicCritical(boolean magicCritical) { this.magicCritical = magicCritical; }
-
     @Override
     public String toString() {
-        return String.format("%d [Lv.%d] - %s", skillId, level, name);
+        return String.format("%d - %s (%d levels)", skillId, name, levels);
     }
+}
+
+// Classe para tags <set>
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillSet {
+    @XmlAttribute(name = "name")
+    private String name;
+    
+    @XmlAttribute(name = "val")
+    private String val;
+    
+    public String getName() { return name; }
+    public String getVal() { return val; }
+    public void setName(String name) { this.name = name; }
+    public void setVal(String val) { this.val = val; }
+    
+    @Override
+    public String toString() {
+        return name + " = " + val;
+    }
+}
+
+// Classe para tags <table>
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillTable {
+    @XmlAttribute(name = "name")
+    private String name;
+    
+    @XmlValue
+    private String values;
+    
+    public String getName() { return name; }
+    public String getValues() { return values; }
+    public void setName(String name) { this.name = name; }
+    public void setValues(String values) { this.values = values; }
+    
+    public List<String> getValuesList() {
+        if (values == null || values.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.asList(values.split(" "));
+    }
+    
+    @Override
+    public String toString() {
+        return name + " = " + values;
+    }
+}
+
+// Classe para conditions
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillConditions {
+    @XmlAttribute(name = "msgId")
+    private String msgId;
+    
+    @XmlAttribute(name = "addName")
+    private String addName;
+    
+    @XmlElement(name = "using")
+    private SkillUsing using;
+    
+    @XmlElement(name = "and")
+    private SkillAnd and;
+    
+    @XmlElement(name = "target")
+    private SkillTarget target;
+    
+    @XmlElement(name = "player")
+    private SkillPlayer player;
+    
+    public String getMsgId() { return msgId; }
+    public String getAddName() { return addName; }
+    public SkillUsing getUsing() { return using; }
+    public SkillAnd getAnd() { return and; }
+    public SkillTarget getTarget() { return target; }
+    public SkillPlayer getPlayer() { return player; }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (using != null) sb.append("Using: ").append(using.getKind());
+        if (target != null) sb.append(" Target: ").append(target.getRace());
+        if (player != null) sb.append(" Player HP: ").append(player.getHp());
+        return sb.toString();
+    }
+}
+
+// Classe para and (condições compostas)
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillAnd {
+    @XmlElement(name = "using")
+    private SkillUsing using;
+    
+    @XmlElement(name = "target")
+    private SkillTarget target;
+    
+    @XmlElement(name = "player")
+    private SkillPlayer player;
+    
+    public SkillUsing getUsing() { return using; }
+    public SkillTarget getTarget() { return target; }
+    public SkillPlayer getPlayer() { return player; }
+}
+
+// Classe para using
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillUsing {
+    @XmlAttribute(name = "kind")
+    private String kind;
+    
+    public String getKind() { return kind; }
+}
+
+// Classe para target
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillTarget {
+    @XmlAttribute(name = "race")
+    private String race;
+    
+    @XmlAttribute(name = "mindistance")
+    private String mindistance;
+    
+    @XmlAttribute(name = "abnormal")
+    private String abnormal;
+    
+    public String getRace() { return race; }
+    public String getMindistance() { return mindistance; }
+    public String getAbnormal() { return abnormal; }
+}
+
+// Classe para player
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillPlayer {
+    @XmlAttribute(name = "hp")
+    private String hp;
+    
+    @XmlAttribute(name = "Charges")
+    private String charges;
+    
+    @XmlAttribute(name = "invSize")
+    private String invSize;
+    
+    @XmlAttribute(name = "weight")
+    private String weight;
+    
+    public String getHp() { return hp; }
+    public String getCharges() { return charges; }
+    public String getInvSize() { return invSize; }
+    public String getWeight() { return weight; }
+}
+
+// Classe para effects
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillEffects {
+    @XmlElement(name = "effect")
+    private List<SkillEffect> effects = new ArrayList<>();
+    
+    public List<SkillEffect> getEffects() { return effects; }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (SkillEffect effect : effects) {
+            sb.append(effect.toString()).append("\n");
+        }
+        return sb.toString();
+    }
+}
+
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillEffect {
+    @XmlAttribute(name = "name")
+    private String name;
+    
+    @XmlElement(name = "param")
+    private List<SkillParam> params;
+    
+    @XmlElement(name = "mul")
+    private List<SkillStat> muls;
+    
+    @XmlElement(name = "add")
+    private List<SkillStat> adds;
+    
+    @XmlElement(name = "sub")
+    private List<SkillStat> subs;
+    
+    @XmlElement(name = "set")
+    private List<SkillStat> sets;
+    
+    public String getName() { return name; }
+    public List<SkillParam> getParams() { return params; }
+    public List<SkillStat> getMuls() { return muls; }
+    public List<SkillStat> getAdds() { return adds; }
+    public List<SkillStat> getSubs() { return subs; }
+    public List<SkillStat> getSets() { return sets; }
+    
+    @Override
+    public String toString() {
+        return name + (params != null ? " params:" + params.size() : "");
+    }
+}
+
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillParam {
+    @XmlAttribute(name = "stat")
+    private String stat;
+    
+    @XmlAttribute(name = "val")
+    private String val;
+    
+    @XmlAttribute(name = "power")
+    private String power;
+    
+    @XmlAttribute(name = "time")
+    private String time;
+    
+    @XmlAttribute(name = "chance")
+    private String chance;
+    
+    public String getStat() { return stat; }
+    public String getVal() { return val; }
+    public String getPower() { return power; }
+    public String getTime() { return time; }
+    public String getChance() { return chance; }
+}
+
+@XmlAccessorType(XmlAccessType.FIELD)
+class SkillStat {
+    @XmlAttribute(name = "stat")
+    private String stat;
+    
+    @XmlAttribute(name = "val")
+    private String val;
+    
+    public String getStat() { return stat; }
+    public String getVal() { return val; }
 }

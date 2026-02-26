@@ -10,7 +10,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@XmlRootElement(name = "skills")
+@XmlRootElement(name = "list")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SkillManager {
     
@@ -30,15 +30,9 @@ public class SkillManager {
         skills.remove(skill);
     }
     
-    public List<Skill> findSkillById(int skillId) {
+    public Skill findSkillById(int skillId) {
         return skills.stream()
                 .filter(s -> s.getSkillId() == skillId)
-                .collect(Collectors.toList());
-    }
-    
-    public Skill findSkillByIdAndLevel(int skillId, int level) {
-        return skills.stream()
-                .filter(s -> s.getSkillId() == skillId && s.getLevel() == level)
                 .findFirst()
                 .orElse(null);
     }
@@ -63,12 +57,14 @@ public class SkillManager {
         Unmarshaller unmarshaller = context.createUnmarshaller();
         SkillManager loaded = (SkillManager) unmarshaller.unmarshal(file);
         this.skills = loaded.getSkills();
+        System.out.println("Loaded " + skills.size() + " skills!");
     }
     
     public void saveToFile(File file) throws Exception {
         JAXBContext context = JAXBContext.newInstance(SkillManager.class);
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
         marshaller.marshal(this, file);
     }
 }
