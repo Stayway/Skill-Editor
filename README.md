@@ -6,6 +6,18 @@
 
 A professional graphical tool for editing Lineage 2 server skills. Developed in Java, it allows you to load, view, edit, create, and export skills intuitively.
 
+## How compile?
+
+### **Pré-requirements**
+- Java 25 ou superior
+- Maven 3.9 ou superior
+
+### **Compile**
+
+- **1. Right click pom.xml
+- **2. Runs As --- Maven Build
+- **Configure the Goals and click in Run. In Fileld Goals digite: clean compile assembly:single
+
 ## Features
 
 - **Load XML** - Opens skill files in standard L2J/aCis format
@@ -40,3 +52,4 @@ A professional graphical tool for editing Lineage 2 server skills. Developed in 
     <skill_type>BUFF</skill_type>
     <magic_critical>false</magic_critical>
 </skill>
+

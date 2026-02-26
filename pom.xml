@@ -8,11 +8,12 @@
     
     <groupId>com.lineage.tools</groupId>
     <artifactId>skill-editor</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
     
     <name>Lineage Skill Editor</name>
-    <description>Ferramenta para editar skills do servidor Lineage</description>
+    <description>Professional tool for editing Lineage 2 server skills</description>
+    <url>https://github.com/Stayway/Skill-Editor</url>
     
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -21,21 +22,21 @@
     </properties>
     
     <dependencies>
-        <!-- JAXB API - For Java 25 -->
+        <!-- JAXB API -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
         </dependency>
         
-        <!-- JAXB -->
+        <!-- Implementacion JAXB -->
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-impl</artifactId>
             <version>2.3.3</version>
         </dependency>
         
-        <!-- Core do JAXB -->
+        <!-- Core of JAXB -->
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-core</artifactId>
@@ -49,17 +50,36 @@
             <version>1.1.1</version>
         </dependency>
         
-        <!-- Modern Interface -->
+        <!-- Modern style -->
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
             <version>3.2.5</version>
         </dependency>
+        
+        <!-- Themes -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-extras</artifactId>
+            <version>3.2.5</version>
+        </dependency>
     </dependencies>
     
     <build>
+        <finalName>LineageSkillEditor</finalName>
+        
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.png</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+        </resources>
+        
         <plugins>
-            <!-- Plugin of compiler Java 25 -->
+            <!-- Plugin of compile -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -67,10 +87,11 @@
                 <configuration>
                     <source>25</source>
                     <target>25</target>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             
-            <!-- Plugin for JAR exe -->
+            <!-- Plugin for create JAR with dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -79,12 +100,18 @@
                     <archive>
                         <manifest>
                             <mainClass>com.lineage.tools.SkillEditorGUI</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
+                        <manifestEntries>
+                            <Built-By>Stayway</Built-By>
+                            <Built-Date>${maven.build.timestamp}</Built-Date>
+                        </manifestEntries>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>LineageSkillEditor</finalName>
+                    <finalName>LineageSkillEditor-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
@@ -97,6 +124,67 @@
                     </execution>
                 </executions>
             </plugin>
+            
+            <!-- Plugin for create JAR w7o dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.lineage.tools.SkillEditorGUI</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
+            <!-- Plugin pfro copy dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+    
+    <!-- Aditional Info -->
+    <organization>
+        <name>Stayway</name>
+        <url>https://github.com/Stayway</url>
+    </organization>
+    
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    
+    <developers>
+        <developer>
+            <id>Stayway</id>
+            <name>Stayway</name>
+            <email>stayway@users.noreply.github.com</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
 </project>
