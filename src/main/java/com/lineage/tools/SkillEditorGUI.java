@@ -86,7 +86,7 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private void initComponents() {
-        setTitle("Lineage Skill Editor - Advanced Edition");
+        setTitle("Mobius-Lineage Skill Editor - Advanced Edition");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 800);
         setLocationRelativeTo(null);
@@ -119,33 +119,54 @@ public class SkillEditorGUI extends JFrame {
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         
-        // File Menu
+        // ===== FILE MENU =====
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic('F');
         
-        JMenuItem openItem = createMenuItem("Open XML", "icons/open.png", 
-            KeyStroke.getKeyStroke("ctrl O"), e -> loadXml());
-        JMenuItem saveItem = createMenuItem("Save XML", "icons/save.png", 
-            KeyStroke.getKeyStroke("ctrl S"), e -> saveXml());
+        // Item Open com imagem
+        JMenuItem openItem = new JMenuItem("Open XML");
+        ImageIcon openIcon = loadIcon("icons/open.png", 16, 16);
+        if (openIcon != null) openItem.setIcon(openIcon);
+        openItem.setAccelerator(KeyStroke.getKeyStroke("ctrl O"));
+        openItem.addActionListener(e -> loadXml());
         fileMenu.add(openItem);
+        
+        // Item Save com imagem
+        JMenuItem saveItem = new JMenuItem("Save XML");
+        ImageIcon saveIcon = loadIcon("icons/save.png", 16, 16);
+        if (saveIcon != null) saveItem.setIcon(saveIcon);
+        saveItem.setAccelerator(KeyStroke.getKeyStroke("ctrl S"));
+        saveItem.addActionListener(e -> saveXml());
         fileMenu.add(saveItem);
+        
         fileMenu.addSeparator();
         
-        JMenuItem exitItem = createMenuItem("Exit", null, null, e -> System.exit(0));
+        // Item Exit
+        JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
         fileMenu.add(exitItem);
         
-        // Tools Menu
+        // ===== TOOLS MENU =====
         JMenu toolsMenu = new JMenu("Tools");
         toolsMenu.setMnemonic('T');
         
-        JMenuItem validateItem = createMenuItem("Validate Skills", "icons/validate.png", 
-            null, e -> validateSkills());
-        JMenuItem exportItem = createMenuItem("Export to CSV", "icons/export.png", 
-            null, e -> exportToCsv());
+        // Item Validate com imagem
+        JMenuItem validateItem = new JMenuItem("Validate Skills");
+        ImageIcon validateIcon = loadIcon("icons/validate.png", 16, 16);
+        if (validateIcon != null) validateItem.setIcon(validateIcon);
+        validateItem.addActionListener(e -> validateSkills());
         toolsMenu.add(validateItem);
+        
+        // Item Export com imagem
+        JMenuItem exportItem = new JMenuItem("Export to CSV");
+        ImageIcon exportIcon = loadIcon("icons/export.png", 16, 16);
+        if (exportIcon != null) exportItem.setIcon(exportIcon);
+        exportItem.addActionListener(e -> exportToCsv());
         toolsMenu.add(exportItem);
+        
         toolsMenu.addSeparator();
         
+        // Item Dark Mode (checkbox)
         JCheckBoxMenuItem themeItem = new JCheckBoxMenuItem("Dark Mode", darkMode);
         themeItem.addActionListener(e -> {
             applyTheme(!darkMode);
@@ -153,13 +174,26 @@ public class SkillEditorGUI extends JFrame {
         });
         toolsMenu.add(themeItem);
         
-        // Help Menu
+        // Item Skill Tree Editor
+        toolsMenu.addSeparator();
+        JMenuItem skillTreeItem = new JMenuItem("Skill Tree Editor");
+        ImageIcon treeIcon = loadIcon("icons/tree.png", 16, 16);
+        if (treeIcon != null) skillTreeItem.setIcon(treeIcon);
+        skillTreeItem.addActionListener(e -> openSkillTreeEditor());
+        toolsMenu.add(skillTreeItem);
+        
+        // ===== HELP MENU =====
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic('H');
         
-        JMenuItem aboutItem = createMenuItem("About", null, null, e -> showAboutDialog());
+        // Item About
+        JMenuItem aboutItem = new JMenuItem("About");
+        ImageIcon aboutIcon = loadIcon("icons/about.png", 16, 16);
+        if (aboutIcon != null) aboutItem.setIcon(aboutIcon);
+        aboutItem.addActionListener(e -> showAboutDialog());
         helpMenu.add(aboutItem);
         
+        // Adicionar menus à barra
         menuBar.add(fileMenu);
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
@@ -204,7 +238,7 @@ public class SkillEditorGUI extends JFrame {
         }
         button.setToolTipText(tooltip);
         button.addActionListener(action);
-        button.setPreferredSize(new Dimension(50, 50));
+        button.setPreferredSize(new Dimension(60, 40));
         toolBar.add(button);
     }
     
@@ -298,12 +332,16 @@ public class SkillEditorGUI extends JFrame {
         
         rightPanel.add(tabbedPane, BorderLayout.CENTER);
         
-        // Botão Save
+        // Botão Save com imagem
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnSave = new JButton("💾 Save Changes");
-        btnSave.setFont(btnSave.getFont().deriveFont(Font.BOLD, 14));
+        
+        // Carregar a imagem do botão
+        ImageIcon icon = loadIcon("icons/save_changes.png", 150, 35);
+        JButton btnSave = new JButton(icon);
+        btnSave.setToolTipText("Save Changes"); // Texto ao passar o mouse
         btnSave.setPreferredSize(new Dimension(150, 35));
         btnSave.addActionListener(e -> saveSkillChanges());
+        
         buttonPanel.add(btnSave);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
         
@@ -395,17 +433,14 @@ public class SkillEditorGUI extends JFrame {
         
         // Botões para gerenciar sets
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton btnAdd = new JButton("Add Set");
+        JButton btnAdd = createSmallButton("Add Set", e -> addSet());
         btnAdd.setIcon(loadIcon("icons/add.png", 16, 16));
-        btnAdd.addActionListener(e -> addSet());
         
-        JButton btnRemove = new JButton("Remove");
+        JButton btnRemove = createSmallButton("Remove", e -> removeSet());
         btnRemove.setIcon(loadIcon("icons/remove.png", 16, 16));
-        btnRemove.addActionListener(e -> removeSet());
         
-        JButton btnEdit = new JButton("Edit");
+        JButton btnEdit = createSmallButton("Edit", e -> editSet());
         btnEdit.setIcon(loadIcon("icons/edit.png", 16, 16));
-        btnEdit.addActionListener(e -> editSet());
         
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnRemove);
@@ -435,17 +470,14 @@ public class SkillEditorGUI extends JFrame {
         
         // Botões para gerenciar tables
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton btnAdd = new JButton("Add Table");
+        JButton btnAdd = createSmallButton("Add Table", e -> addTable());
         btnAdd.setIcon(loadIcon("icons/add.png", 16, 16));
-        btnAdd.addActionListener(e -> addTable());
         
-        JButton btnRemove = new JButton("Remove");
+        JButton btnRemove = createSmallButton("Remove", e -> removeTable());
         btnRemove.setIcon(loadIcon("icons/remove.png", 16, 16));
-        btnRemove.addActionListener(e -> removeTable());
         
-        JButton btnEdit = new JButton("Edit");
+        JButton btnEdit = createSmallButton("Edit", e -> editTable());
         btnEdit.setIcon(loadIcon("icons/edit.png", 16, 16));
-        btnEdit.addActionListener(e -> editTable());
         
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnRemove);
@@ -501,7 +533,7 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private void showAboutDialog() {
-        String message = "Lineage Skill Editor v2.0\n\n" +
+        String message = "Mobius-Lineage Skill Editor v2.0\n\n" +
                         "Professional tool for editing Lineage 2 server skills.\n" +
                         "Supports advanced XML format with enchant groups.\n\n" +
                         "© 2026 Stayway\n" +
@@ -511,6 +543,25 @@ public class SkillEditorGUI extends JFrame {
         
         JOptionPane.showMessageDialog(this, message, "About", 
             JOptionPane.INFORMATION_MESSAGE, logo);
+    }
+    
+    private void openSkillTreeEditor() {
+        SwingUtilities.invokeLater(() -> {
+            SkillTreeEditorGUI editor = new SkillTreeEditorGUI();
+            editor.setVisible(true);
+        });
+    }
+    
+    /**
+     * Cria um botão pequeno para ações secundárias
+     */
+    private JButton createSmallButton(String text, ActionListener action) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(85, 28));
+        button.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        button.setMargin(new Insets(2, 8, 2, 8));
+        button.addActionListener(action);
+        return button;
     }
     
     private void loadXml() {
