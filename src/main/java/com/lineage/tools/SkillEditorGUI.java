@@ -103,6 +103,13 @@ public class SkillEditorGUI extends JFrame {
         setIcon();
     }
     
+    private void openItemEditor() {
+        SwingUtilities.invokeLater(() -> {
+            ItemEditorGUI editor = new ItemEditorGUI(currentLocale);
+            editor.setVisible(true);
+        });
+    }
+    
     private void setLanguage(Locale locale) {
         currentLocale = locale;
         messages = ResourceBundle.getBundle("Messages", locale);
@@ -258,6 +265,12 @@ public class SkillEditorGUI extends JFrame {
         // Tools Menu
         JMenu toolsMenu = new JMenu(getMsg("menu.tools"));
         toolsMenu.setMnemonic('T');
+        
+        JMenuItem itemEditorItem = new JMenuItem("Item Editor");
+        ImageIcon itemIcon = loadIcon("icons/item.png", 16, 16);
+        if (itemIcon != null) itemEditorItem.setIcon(itemIcon);
+        itemEditorItem.addActionListener(e -> openItemEditor());
+        toolsMenu.add(itemEditorItem);
         
         JMenuItem validateItem = createMenuItem(getMsg("menu.tools.validate"), "icons/validate.png", 
             null, e -> validateSkills());

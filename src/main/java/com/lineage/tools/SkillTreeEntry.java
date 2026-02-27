@@ -45,7 +45,7 @@ public class SkillTreeEntry {
     @XmlAttribute(name = "learnedByNpc")
     private boolean learnedByNpc;
     
-    // Construtor padrão
+    // Standart Constructor
     public SkillTreeEntry() {}
     
     // Getters e Setters
