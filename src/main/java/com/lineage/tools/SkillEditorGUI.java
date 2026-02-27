@@ -15,6 +15,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 @SuppressWarnings("unused")
 public class SkillEditorGUI extends JFrame {
@@ -28,7 +30,30 @@ public class SkillEditorGUI extends JFrame {
     private Skill currentSkill;
     private boolean darkMode = true;
     
-    // Componentes do editor
+    // Internationalization
+    private ResourceBundle messages;
+    private Locale currentLocale = Locale.ENGLISH;
+    
+    // Avaiable languages
+	private final Locale[] supportedLocales = {
+    Locale.ENGLISH,
+    Locale.of("pt", "PT"),  // New method in Java 19+
+    Locale.of("es", "ES")   // New method in Java 19+
+	};
+    
+    private final String[] languageNames = {"English", "Português", "Español"};
+    
+    // Components that need to be updated with the language.
+    private JMenuBar menuBar;
+    private JToolBar toolBar;
+    private JPanel leftPanel;
+    private JPanel rightPanel;
+    private JTabbedPane tabbedPane;
+    private JLabel statusLabel;
+    private JButton btnSave;
+    private JLabel searchLabel;
+    
+    // Editor components
     private JTextField txtSkillId, txtName, txtLevels;
     private JTextField txtEnchantGroup1, txtEnchantGroup2, txtEnchantGroup3, txtEnchantGroup4;
     private JTable setsTable;
@@ -37,15 +62,83 @@ public class SkillEditorGUI extends JFrame {
     private DefaultTableModel tablesTableModel;
     private JTextArea effectsArea;
     private JTextArea conditionsArea;
-    private JLabel statusLabel;
     
     public SkillEditorGUI() {
-        // Aplicar tema escuro por padrão
+        // Default Language English
+        setLanguage(Locale.ENGLISH);
+        
+        // Apply dark theme by default
         applyTheme(true);
         
         skillManager = new SkillManager();
         initComponents();
         setIcon();
+    }
+    
+    private void setLanguage(Locale locale) {
+        currentLocale = locale;
+        messages = ResourceBundle.getBundle("Messages", locale);
+        
+        // If the interface has already been created, update it.
+        if (menuBar != null) {
+            updateUILanguage();
+        }
+    }
+    
+    private void updateUILanguage() {
+        setTitle(getMsg("app.title") + " - Advanced Edition");
+        
+        // Recreate menu
+        JMenuBar newMenuBar = createMenuBar();
+        setJMenuBar(newMenuBar);
+        
+        // Recreate toolbar
+        if (toolBar != null) {
+            getContentPane().remove(toolBar);
+        }
+        toolBar = createToolBar();
+        add(toolBar, BorderLayout.NORTH);
+        
+        // Update panel titles
+        if (leftPanel != null) {
+            leftPanel.setBorder(BorderFactory.createTitledBorder(getMsg("panel.skills")));
+        }
+        if (rightPanel != null) {
+            rightPanel.setBorder(BorderFactory.createTitledBorder(getMsg("panel.editor")));
+        }
+        
+        // Update search label
+        if (searchLabel != null) {
+            searchLabel.setText("🔍 " + getMsg("panel.search") + ": ");
+        }
+        
+        // Update abas
+        if (tabbedPane != null) {
+            tabbedPane.setTitleAt(0, getMsg("tab.basic"));
+            tabbedPane.setTitleAt(1, getMsg("tab.sets"));
+            tabbedPane.setTitleAt(2, getMsg("tab.tables"));
+            tabbedPane.setTitleAt(3, getMsg("tab.effects"));
+            tabbedPane.setTitleAt(4, getMsg("tab.conditions"));
+        }
+        
+        // Update save button
+        if (btnSave != null) {
+            btnSave.setText(getMsg("button.save"));
+        }
+        
+        // Update status
+        updateStatus(getMsg("status.ready"));
+        
+        revalidate();
+        repaint();
+    }
+    
+    private String getMsg(String key) {
+        try {
+            return messages.getString(key);
+        } catch (Exception e) {
+            return key;
+        }
     }
     
     private void applyTheme(boolean dark) {
@@ -66,7 +159,6 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private void setIcon() {
-        // Carregar ícone da janela
         URL iconURL = getClass().getClassLoader().getResource("icon.png");
         if (iconURL != null) {
             ImageIcon icon = new ImageIcon(iconURL);
@@ -81,33 +173,34 @@ public class SkillEditorGUI extends JFrame {
             Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
             return new ImageIcon(img);
         }
-        // Retorna null se não encontrar
         return null;
     }
     
     private void initComponents() {
-        setTitle("Mobius-Lineage Skill Editor - Advanced Edition");
+        setTitle(getMsg("app.title") + " - Advanced Edition");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1400, 800);
         setLocationRelativeTo(null);
         
         // Menu
-        JMenuBar menuBar = createMenuBar();
+        menuBar = createMenuBar();
         setJMenuBar(menuBar);
         
         // Toolbar
-        JToolBar toolBar = createToolBar();
+        toolBar = createToolBar();
         add(toolBar, BorderLayout.NORTH);
         
-        // Painel principal dividido
+       // Split main panel
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplit.setDividerLocation(450);
         
-        // ===== PAINEL ESQUERDO =====
-        mainSplit.setLeftComponent(createLeftPanel());
+        // ===== Left Panel =====
+        leftPanel = createLeftPanel();
+        mainSplit.setLeftComponent(leftPanel);
         
-        // ===== PAINEL DIREITO =====
-        mainSplit.setRightComponent(createRightPanel());
+        // ===== Right Panel =====
+        rightPanel = createRightPanel();
+        mainSplit.setRightComponent(rightPanel);
         
         add(mainSplit, BorderLayout.CENTER);
         
@@ -117,64 +210,69 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private JMenuBar createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
+        JMenuBar newMenuBar = new JMenuBar();
         
-        // ===== FILE MENU =====
-        JMenu fileMenu = new JMenu("File");
+        // File Menu
+        JMenu fileMenu = new JMenu(getMsg("menu.file"));
         fileMenu.setMnemonic('F');
         
-        // Item Open com imagem
-        JMenuItem openItem = new JMenuItem("Open XML");
-        ImageIcon openIcon = loadIcon("icons/open.png", 16, 16);
-        if (openIcon != null) openItem.setIcon(openIcon);
-        openItem.setAccelerator(KeyStroke.getKeyStroke("ctrl O"));
-        openItem.addActionListener(e -> loadXml());
+        JMenuItem openItem = createMenuItem(getMsg("menu.file.open"), "icons/open.png", 
+            KeyStroke.getKeyStroke("ctrl O"), e -> loadXml());
+        JMenuItem saveItem = createMenuItem(getMsg("menu.file.save"), "icons/save.png", 
+            KeyStroke.getKeyStroke("ctrl S"), e -> saveXml());
         fileMenu.add(openItem);
-        
-        // Item Save com imagem
-        JMenuItem saveItem = new JMenuItem("Save XML");
-        ImageIcon saveIcon = loadIcon("icons/save.png", 16, 16);
-        if (saveIcon != null) saveItem.setIcon(saveIcon);
-        saveItem.setAccelerator(KeyStroke.getKeyStroke("ctrl S"));
-        saveItem.addActionListener(e -> saveXml());
         fileMenu.add(saveItem);
-        
         fileMenu.addSeparator();
         
-        // Item Exit
-        JMenuItem exitItem = new JMenuItem("Exit");
-        exitItem.addActionListener(e -> System.exit(0));
+        JMenuItem exitItem = createMenuItem(getMsg("menu.file.exit"), null, null, e -> System.exit(0));
         fileMenu.add(exitItem);
         
-        // ===== TOOLS MENU =====
-        JMenu toolsMenu = new JMenu("Tools");
+        // Tools Menu
+        JMenu toolsMenu = new JMenu(getMsg("menu.tools"));
         toolsMenu.setMnemonic('T');
         
-        // Item Validate com imagem
-        JMenuItem validateItem = new JMenuItem("Validate Skills");
-        ImageIcon validateIcon = loadIcon("icons/validate.png", 16, 16);
-        if (validateIcon != null) validateItem.setIcon(validateIcon);
-        validateItem.addActionListener(e -> validateSkills());
+        JMenuItem validateItem = createMenuItem(getMsg("menu.tools.validate"), "icons/validate.png", 
+            null, e -> validateSkills());
+        JMenuItem exportItem = createMenuItem(getMsg("menu.tools.export"), "icons/export.png", 
+            null, e -> exportToCsv());
         toolsMenu.add(validateItem);
-        
-        // Item Export com imagem
-        JMenuItem exportItem = new JMenuItem("Export to CSV");
-        ImageIcon exportIcon = loadIcon("icons/export.png", 16, 16);
-        if (exportIcon != null) exportItem.setIcon(exportIcon);
-        exportItem.addActionListener(e -> exportToCsv());
         toolsMenu.add(exportItem);
-        
         toolsMenu.addSeparator();
         
-        // Item Dark Mode (checkbox)
-        JCheckBoxMenuItem themeItem = new JCheckBoxMenuItem("Dark Mode", darkMode);
-        themeItem.addActionListener(e -> {
-            applyTheme(!darkMode);
-            themeItem.setSelected(darkMode);
-        });
-        toolsMenu.add(themeItem);
+        // Theme Submenu
+        JMenu themeMenu = new JMenu(getMsg("menu.tools.theme"));
+        ButtonGroup themeGroup = new ButtonGroup();
         
-        // Item Skill Tree Editor
+        JRadioButtonMenuItem darkTheme = new JRadioButtonMenuItem(getMsg("theme.dark"), darkMode);
+        darkTheme.addActionListener(e -> applyTheme(true));
+        themeGroup.add(darkTheme);
+        themeMenu.add(darkTheme);
+        
+        JRadioButtonMenuItem lightTheme = new JRadioButtonMenuItem(getMsg("theme.light"), !darkMode);
+        lightTheme.addActionListener(e -> applyTheme(false));
+        themeGroup.add(lightTheme);
+        themeMenu.add(lightTheme);
+        
+        toolsMenu.add(themeMenu);
+        
+        // Language Submenu
+        JMenu languageMenu = new JMenu(getMsg("menu.tools.language"));
+        ButtonGroup languageGroup = new ButtonGroup();
+        
+        for (int i = 0; i < supportedLocales.length; i++) {
+            Locale loc = supportedLocales[i];
+            String langName = languageNames[i];
+            JRadioButtonMenuItem langItem = new JRadioButtonMenuItem(langName, 
+                loc.equals(currentLocale));
+            int index = i;
+            langItem.addActionListener(e -> setLanguage(supportedLocales[index]));
+            languageGroup.add(langItem);
+            languageMenu.add(langItem);
+        }
+        
+        toolsMenu.add(languageMenu);
+        
+        // Skill Tree Editor
         toolsMenu.addSeparator();
         JMenuItem skillTreeItem = new JMenuItem("Skill Tree Editor");
         ImageIcon treeIcon = loadIcon("icons/tree.png", 16, 16);
@@ -182,23 +280,18 @@ public class SkillEditorGUI extends JFrame {
         skillTreeItem.addActionListener(e -> openSkillTreeEditor());
         toolsMenu.add(skillTreeItem);
         
-        // ===== HELP MENU =====
-        JMenu helpMenu = new JMenu("Help");
+        // Help Menu
+        JMenu helpMenu = new JMenu(getMsg("menu.help"));
         helpMenu.setMnemonic('H');
         
-        // Item About
-        JMenuItem aboutItem = new JMenuItem("About");
-        ImageIcon aboutIcon = loadIcon("icons/about.png", 16, 16);
-        if (aboutIcon != null) aboutItem.setIcon(aboutIcon);
-        aboutItem.addActionListener(e -> showAboutDialog());
+        JMenuItem aboutItem = createMenuItem(getMsg("menu.help.about"), null, null, e -> showAboutDialog());
         helpMenu.add(aboutItem);
         
-        // Adicionar menus à barra
-        menuBar.add(fileMenu);
-        menuBar.add(toolsMenu);
-        menuBar.add(helpMenu);
+        newMenuBar.add(fileMenu);
+        newMenuBar.add(toolsMenu);
+        newMenuBar.add(helpMenu);
         
-        return menuBar;
+        return newMenuBar;
     }
     
     private JMenuItem createMenuItem(String text, String iconPath, KeyStroke accelerator, ActionListener action) {
@@ -213,21 +306,20 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private JToolBar createToolBar() {
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+        JToolBar newToolBar = new JToolBar();
+        newToolBar.setFloatable(false);
         
-        // Botões com imagens que já contêm texto
-        addToolBarButton(toolBar, "New Skill", "icons/new.png", e -> newSkill());
-        addToolBarButton(toolBar, "Open XML", "icons/open.png", e -> loadXml());
-        addToolBarButton(toolBar, "Save XML", "icons/save.png", e -> saveXml());
-        toolBar.addSeparator();
-        addToolBarButton(toolBar, "Clone", "icons/clone.png", e -> cloneSkill());
-        addToolBarButton(toolBar, "Delete", "icons/delete.png", e -> deleteSkill());
-        toolBar.addSeparator();
-        addToolBarButton(toolBar, "Validate", "icons/validate.png", e -> validateSkills());
-        addToolBarButton(toolBar, "Export", "icons/export.png", e -> exportToCsv());
+        addToolBarButton(newToolBar, getMsg("toolbar.new"), "icons/new.png", e -> newSkill());
+        addToolBarButton(newToolBar, getMsg("toolbar.open"), "icons/open.png", e -> loadXml());
+        addToolBarButton(newToolBar, getMsg("toolbar.save"), "icons/save.png", e -> saveXml());
+        newToolBar.addSeparator();
+        addToolBarButton(newToolBar, getMsg("toolbar.clone"), "icons/clone.png", e -> cloneSkill());
+        addToolBarButton(newToolBar, getMsg("toolbar.delete"), "icons/delete.png", e -> deleteSkill());
+        newToolBar.addSeparator();
+        addToolBarButton(newToolBar, getMsg("toolbar.validate"), "icons/validate.png", e -> validateSkills());
+        addToolBarButton(newToolBar, getMsg("toolbar.export"), "icons/export.png", e -> exportToCsv());
         
-        return toolBar;
+        return newToolBar;
     }
     
     private void addToolBarButton(JToolBar toolBar, String tooltip, String iconPath, ActionListener action) {
@@ -243,13 +335,14 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private JPanel createLeftPanel() {
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setBorder(BorderFactory.createTitledBorder("Skills List"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(getMsg("panel.skills")));
         
         // Painel de busca
         JPanel searchPanel = new JPanel(new BorderLayout());
         searchPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        searchPanel.add(new JLabel("🔍 Search: "), BorderLayout.WEST);
+        searchLabel = new JLabel("🔍 " + getMsg("panel.search") + ": ");
+        searchPanel.add(searchLabel, BorderLayout.WEST);
         searchField = new JTextField();
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) { filterSkills(); }
@@ -257,7 +350,7 @@ public class SkillEditorGUI extends JFrame {
             public void insertUpdate(DocumentEvent e) { filterSkills(); }
         });
         searchPanel.add(searchField, BorderLayout.CENTER);
-        leftPanel.add(searchPanel, BorderLayout.NORTH);
+        panel.add(searchPanel, BorderLayout.NORTH);
         
         // Tabela de skills
         String[] columns = {"ID", "Name", "Levels", "Enchant"};
@@ -276,7 +369,6 @@ public class SkillEditorGUI extends JFrame {
             }
         });
         
-        // Renderizador para destacar skills com enchant
         skillTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
@@ -303,49 +395,36 @@ public class SkillEditorGUI extends JFrame {
         });
         
         JScrollPane scrollPane = new JScrollPane(skillTable);
-        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.CENTER);
         
-        return leftPanel;
+        return panel;
     }
     
     private JPanel createRightPanel() {
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBorder(BorderFactory.createTitledBorder("Skill Editor"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(getMsg("panel.editor")));
         
-        // Abas para diferentes aspectos da skill
-        JTabbedPane tabbedPane = new JTabbedPane();
+        // Tabs for different aspects of the skill.
+        tabbedPane = new JTabbedPane();
         
-        // Aba 1: Atributos Básicos
-        tabbedPane.addTab("Basic Attributes", createBasicAttributesPanel());
+        tabbedPane.addTab(getMsg("tab.basic"), createBasicAttributesPanel());
+        tabbedPane.addTab(getMsg("tab.sets"), createSetsPanel());
+        tabbedPane.addTab(getMsg("tab.tables"), createTablesPanel());
+        tabbedPane.addTab(getMsg("tab.effects"), createEffectsPanel());
+        tabbedPane.addTab(getMsg("tab.conditions"), createConditionsPanel());
         
-        // Aba 2: Sets
-        tabbedPane.addTab("Sets", createSetsPanel());
+        panel.add(tabbedPane, BorderLayout.CENTER);
         
-        // Aba 3: Tables
-        tabbedPane.addTab("Tables", createTablesPanel());
-        
-        // Aba 4: Effects
-        tabbedPane.addTab("Effects", createEffectsPanel());
-        
-        // Aba 5: Conditions
-        tabbedPane.addTab("Conditions", createConditionsPanel());
-        
-        rightPanel.add(tabbedPane, BorderLayout.CENTER);
-        
-        // Botão Save com imagem
+        // Save Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        
-        // Carregar a imagem do botão
-        ImageIcon icon = loadIcon("icons/save_changes.png", 150, 35);
-        JButton btnSave = new JButton(icon);
-        btnSave.setToolTipText("Save Changes"); // Texto ao passar o mouse
+        btnSave = new JButton(getMsg("button.save"));
+        btnSave.setFont(btnSave.getFont().deriveFont(Font.BOLD, 14));
         btnSave.setPreferredSize(new Dimension(150, 35));
         btnSave.addActionListener(e -> saveSkillChanges());
-        
         buttonPanel.add(btnSave);
-        rightPanel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
         
-        return rightPanel;
+        return panel;
     }
     
     private JPanel createBasicAttributesPanel() {
@@ -356,9 +435,8 @@ public class SkillEditorGUI extends JFrame {
         
         int row = 0;
         
-        // Skill ID
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("🆔 Skill ID:"), gbc);
+        panel.add(new JLabel(getMsg("label.skillId")), gbc);
         gbc.gridx = 1;
         txtSkillId = new JTextField(20);
         txtSkillId.setEditable(false);
@@ -366,46 +444,43 @@ public class SkillEditorGUI extends JFrame {
         panel.add(txtSkillId, gbc);
         row++;
         
-        // Name
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("📝 Name:"), gbc);
+        panel.add(new JLabel(getMsg("label.name")), gbc);
         gbc.gridx = 1;
         txtName = new JTextField(20);
         panel.add(txtName, gbc);
         row++;
         
-        // Levels
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("📊 Levels:"), gbc);
+        panel.add(new JLabel(getMsg("label.levels")), gbc);
         gbc.gridx = 1;
         txtLevels = new JTextField(20);
         panel.add(txtLevels, gbc);
         row++;
         
-        // Enchant Groups
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("✨ Enchant Group 1:"), gbc);
+        panel.add(new JLabel(getMsg("label.enchant1")), gbc);
         gbc.gridx = 1;
         txtEnchantGroup1 = new JTextField(20);
         panel.add(txtEnchantGroup1, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("✨ Enchant Group 2:"), gbc);
+        panel.add(new JLabel(getMsg("label.enchant2")), gbc);
         gbc.gridx = 1;
         txtEnchantGroup2 = new JTextField(20);
         panel.add(txtEnchantGroup2, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("✨ Enchant Group 3:"), gbc);
+        panel.add(new JLabel(getMsg("label.enchant3")), gbc);
         gbc.gridx = 1;
         txtEnchantGroup3 = new JTextField(20);
         panel.add(txtEnchantGroup3, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("✨ Enchant Group 4:"), gbc);
+        panel.add(new JLabel(getMsg("label.enchant4")), gbc);
         gbc.gridx = 1;
         txtEnchantGroup4 = new JTextField(20);
         panel.add(txtEnchantGroup4, gbc);
@@ -416,7 +491,6 @@ public class SkillEditorGUI extends JFrame {
     private JPanel createSetsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Tabela de sets
         String[] columns = {"Name", "Value"};
         setsTableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -427,20 +501,15 @@ public class SkillEditorGUI extends JFrame {
         
         setsTable = new JTable(setsTableModel);
         setsTable.setRowHeight(25);
+        panel.add(new JScrollPane(setsTable), BorderLayout.CENTER);
         
-        JScrollPane scrollPane = new JScrollPane(setsTable);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        
-        // Botões para gerenciar sets
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton btnAdd = createSmallButton("Add Set", e -> addSet());
-        btnAdd.setIcon(loadIcon("icons/add.png", 16, 16));
-        
-        JButton btnRemove = createSmallButton("Remove", e -> removeSet());
-        btnRemove.setIcon(loadIcon("icons/remove.png", 16, 16));
-        
-        JButton btnEdit = createSmallButton("Edit", e -> editSet());
-        btnEdit.setIcon(loadIcon("icons/edit.png", 16, 16));
+        JButton btnAdd = new JButton(getMsg("button.addSet"));
+        btnAdd.addActionListener(e -> addSet());
+        JButton btnRemove = new JButton(getMsg("button.remove"));
+        btnRemove.addActionListener(e -> removeSet());
+        JButton btnEdit = new JButton(getMsg("button.edit"));
+        btnEdit.addActionListener(e -> editSet());
         
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnRemove);
@@ -453,7 +522,6 @@ public class SkillEditorGUI extends JFrame {
     private JPanel createTablesPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
-        // Tabela de tables
         String[] columns = {"Name", "Values"};
         tablesTableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -464,20 +532,15 @@ public class SkillEditorGUI extends JFrame {
         
         tablesTable = new JTable(tablesTableModel);
         tablesTable.setRowHeight(25);
+        panel.add(new JScrollPane(tablesTable), BorderLayout.CENTER);
         
-        JScrollPane scrollPane = new JScrollPane(tablesTable);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        
-        // Botões para gerenciar tables
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton btnAdd = createSmallButton("Add Table", e -> addTable());
-        btnAdd.setIcon(loadIcon("icons/add.png", 16, 16));
-        
-        JButton btnRemove = createSmallButton("Remove", e -> removeTable());
-        btnRemove.setIcon(loadIcon("icons/remove.png", 16, 16));
-        
-        JButton btnEdit = createSmallButton("Edit", e -> editTable());
-        btnEdit.setIcon(loadIcon("icons/edit.png", 16, 16));
+        JButton btnAdd = new JButton(getMsg("button.addTable"));
+        btnAdd.addActionListener(e -> addTable());
+        JButton btnRemove = new JButton(getMsg("button.remove"));
+        btnRemove.addActionListener(e -> removeTable());
+        JButton btnEdit = new JButton(getMsg("button.edit"));
+        btnEdit.addActionListener(e -> editTable());
         
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnRemove);
@@ -493,11 +556,9 @@ public class SkillEditorGUI extends JFrame {
         effectsArea = new JTextArea();
         effectsArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         effectsArea.setEditable(true);
+        panel.add(new JScrollPane(effectsArea), BorderLayout.CENTER);
         
-        JScrollPane scrollPane = new JScrollPane(effectsArea);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        
-        JLabel infoLabel = new JLabel("📋 Effects (XML format)");
+        JLabel infoLabel = new JLabel(getMsg("label.effects"));
         infoLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         panel.add(infoLabel, BorderLayout.NORTH);
         
@@ -510,11 +571,9 @@ public class SkillEditorGUI extends JFrame {
         conditionsArea = new JTextArea();
         conditionsArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         conditionsArea.setEditable(true);
+        panel.add(new JScrollPane(conditionsArea), BorderLayout.CENTER);
         
-        JScrollPane scrollPane = new JScrollPane(conditionsArea);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        
-        JLabel infoLabel = new JLabel("⚙️ Conditions (XML format)");
+        JLabel infoLabel = new JLabel(getMsg("label.conditions"));
         infoLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         panel.add(infoLabel, BorderLayout.NORTH);
         
@@ -525,7 +584,7 @@ public class SkillEditorGUI extends JFrame {
         JPanel statusBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
         statusBar.setBorder(BorderFactory.createEtchedBorder());
         
-        statusLabel = new JLabel("✅ Ready");
+        statusLabel = new JLabel(getMsg("status.ready"));
         statusLabel.setFont(statusLabel.getFont().deriveFont(11f));
         statusBar.add(statusLabel);
         
@@ -533,36 +592,19 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private void showAboutDialog() {
-        String message = "Mobius-Lineage Skill Editor v2.0\n\n" +
-                        "Professional tool for editing Lineage 2 server skills.\n" +
-                        "Supports advanced XML format with enchant groups.\n\n" +
-                        "© 2026 Stayway\n" +
-                        "Licensed under MIT License";
-        
-        ImageIcon logo = loadIcon("logo.png", 64, 64);
-        
-        JOptionPane.showMessageDialog(this, message, "About", 
-            JOptionPane.INFORMATION_MESSAGE, logo);
+        String message = getMsg("dialog.about.message");
+        JOptionPane.showMessageDialog(this, message, getMsg("dialog.about"), 
+            JOptionPane.INFORMATION_MESSAGE);
     }
     
     private void openSkillTreeEditor() {
         SwingUtilities.invokeLater(() -> {
-            SkillTreeEditorGUI editor = new SkillTreeEditorGUI();
+            SkillTreeEditorGUI editor = new SkillTreeEditorGUI(currentLocale);
             editor.setVisible(true);
         });
     }
     
-    /**
-     * Cria um botão pequeno para ações secundárias
-     */
-    private JButton createSmallButton(String text, ActionListener action) {
-        JButton button = new JButton(text);
-        button.setPreferredSize(new Dimension(85, 28));
-        button.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        button.setMargin(new Insets(2, 8, 2, 8));
-        button.addActionListener(action);
-        return button;
-    }
+		// ========== FUNCTIONALITY METHODS ==========
     
     private void loadXml() {
         JFileChooser fileChooser = new JFileChooser();
@@ -574,12 +616,12 @@ public class SkillEditorGUI extends JFrame {
                 skillManager.loadFromFile(file);
                 refreshSkillTable(skillManager.getSkills());
                 JOptionPane.showMessageDialog(this, 
-                    "Loaded " + skillManager.getSkills().size() + " skills successfully!");
-                updateStatus("Loaded " + skillManager.getSkills().size() + " skills");
+                    getMsg("success.loaded") + " " + skillManager.getSkills().size() + " skills");
+                updateStatus(getMsg("status.loaded") + " " + skillManager.getSkills().size() + " skills");
                 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, 
-                    "Error loading XML: " + ex.getMessage(), 
+                    getMsg("error.loadXML") + " " + ex.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -588,7 +630,7 @@ public class SkillEditorGUI extends JFrame {
     
     private void saveXml() {
         if (skillManager.getSkills().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No skills to save!");
+            JOptionPane.showMessageDialog(this, getMsg("error.noSkill"));
             return;
         }
         
@@ -602,11 +644,11 @@ public class SkillEditorGUI extends JFrame {
                     file = new File(file.getAbsolutePath() + ".xml");
                 }
                 skillManager.saveToFile(file);
-                JOptionPane.showMessageDialog(this, "XML saved successfully!");
-                updateStatus("Saved to " + file.getName());
+                JOptionPane.showMessageDialog(this, getMsg("success.saved"));
+                updateStatus(getMsg("status.saved") + " " + file.getName());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, 
-                    "Error saving XML: " + ex.getMessage(), 
+                    getMsg("error.saveXML") + " " + ex.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -649,7 +691,6 @@ public class SkillEditorGUI extends JFrame {
         
         if (currentSkill == null) return;
         
-        // Carregar atributos básicos
         txtSkillId.setText(String.valueOf(currentSkill.getSkillId()));
         txtName.setText(currentSkill.getName());
         txtLevels.setText(String.valueOf(currentSkill.getLevels()));
@@ -659,7 +700,6 @@ public class SkillEditorGUI extends JFrame {
         txtEnchantGroup3.setText(currentSkill.getEnchantGroup3() != null ? currentSkill.getEnchantGroup3() : "");
         txtEnchantGroup4.setText(currentSkill.getEnchantGroup4() != null ? currentSkill.getEnchantGroup4() : "");
         
-        // Carregar sets
         setsTableModel.setRowCount(0);
         if (currentSkill.getSets() != null) {
             for (SkillSet set : currentSkill.getSets()) {
@@ -667,7 +707,6 @@ public class SkillEditorGUI extends JFrame {
             }
         }
         
-        // Carregar tables
         tablesTableModel.setRowCount(0);
         if (currentSkill.getTables() != null) {
             for (SkillTable table : currentSkill.getTables()) {
@@ -675,43 +714,30 @@ public class SkillEditorGUI extends JFrame {
             }
         }
         
-        // Carregar effects (simplificado)
-        if (currentSkill.getEffects() != null) {
-            effectsArea.setText(currentSkill.getEffects().toString());
-        } else {
-            effectsArea.setText("");
-        }
-        
-        // Carregar conditions (simplificado)
-        if (currentSkill.getConditions() != null) {
-            conditionsArea.setText(currentSkill.getConditions().toString());
-        } else {
-            conditionsArea.setText("");
-        }
+        effectsArea.setText(currentSkill.getEffects() != null ? currentSkill.getEffects().toString() : "");
+        conditionsArea.setText(currentSkill.getConditions() != null ? currentSkill.getConditions().toString() : "");
     }
     
     private void saveSkillChanges() {
         if (currentSkill == null) {
-            JOptionPane.showMessageDialog(this, "No skill selected!");
+            JOptionPane.showMessageDialog(this, getMsg("error.noSkill"));
             return;
         }
         
-        // Salvar atributos básicos
         currentSkill.setName(txtName.getText());
         try {
             currentSkill.setLevels(Integer.parseInt(txtLevels.getText()));
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid levels value!");
+            JOptionPane.showMessageDialog(this, getMsg("error.invalidLevels"));
             return;
         }
         
-        // Salvar enchant groups
         currentSkill.setEnchantGroup1(emptyToNull(txtEnchantGroup1.getText()));
         currentSkill.setEnchantGroup2(emptyToNull(txtEnchantGroup2.getText()));
         currentSkill.setEnchantGroup3(emptyToNull(txtEnchantGroup3.getText()));
         currentSkill.setEnchantGroup4(emptyToNull(txtEnchantGroup4.getText()));
         
-        // Salvar sets
+        // Save sets
         List<SkillSet> newSets = new ArrayList<>();
         for (int i = 0; i < setsTableModel.getRowCount(); i++) {
             String name = (String) setsTableModel.getValueAt(i, 0);
@@ -725,7 +751,7 @@ public class SkillEditorGUI extends JFrame {
         }
         currentSkill.setSets(newSets);
         
-        // Salvar tables
+        // Save tables
         List<SkillTable> newTables = new ArrayList<>();
         for (int i = 0; i < tablesTableModel.getRowCount(); i++) {
             String name = (String) tablesTableModel.getValueAt(i, 0);
@@ -739,9 +765,9 @@ public class SkillEditorGUI extends JFrame {
         }
         currentSkill.setTables(newTables);
         
-        JOptionPane.showMessageDialog(this, "Skill updated successfully!");
+        JOptionPane.showMessageDialog(this, getMsg("success.updated"));
         refreshSkillTable(skillManager.getSkills());
-        updateStatus("Skill " + currentSkill.getSkillId() + " updated");
+        updateStatus(getMsg("status.updated") + " " + currentSkill.getSkillId());
     }
     
     private String emptyToNull(String s) {
@@ -758,7 +784,6 @@ public class SkillEditorGUI extends JFrame {
         skillManager.addSkill(skill);
         refreshSkillTable(skillManager.getSkills());
         
-        // Selecionar a nova skill
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if ((int) tableModel.getValueAt(i, 0) == newId) {
                 skillTable.setRowSelectionInterval(i, i);
@@ -766,12 +791,12 @@ public class SkillEditorGUI extends JFrame {
             }
         }
         
-        updateStatus("New skill created with ID: " + newId);
+        updateStatus(getMsg("status.created") + " " + newId);
     }
     
     private void cloneSkill() {
         if (currentSkill == null) {
-            JOptionPane.showMessageDialog(this, "Select a skill to clone!");
+            JOptionPane.showMessageDialog(this, getMsg("error.selectSkill"));
             return;
         }
         
@@ -779,8 +804,6 @@ public class SkillEditorGUI extends JFrame {
         clone.setSkillId(skillManager.getNextSkillId());
         clone.setName(currentSkill.getName() + " (Clone)");
         clone.setLevels(currentSkill.getLevels());
-        
-        // Clonar enchant groups
         clone.setEnchantGroup1(currentSkill.getEnchantGroup1());
         clone.setEnchantGroup2(currentSkill.getEnchantGroup2());
         clone.setEnchantGroup3(currentSkill.getEnchantGroup3());
@@ -788,13 +811,12 @@ public class SkillEditorGUI extends JFrame {
         
         skillManager.addSkill(clone);
         refreshSkillTable(skillManager.getSkills());
-        
-        updateStatus("Skill cloned with ID: " + clone.getSkillId());
+        updateStatus(getMsg("status.created") + " " + clone.getSkillId());
     }
     
     private void deleteSkill() {
         if (currentSkill == null) {
-            JOptionPane.showMessageDialog(this, "Select a skill to delete!");
+            JOptionPane.showMessageDialog(this, getMsg("error.selectSkillDelete"));
             return;
         }
         
@@ -808,7 +830,7 @@ public class SkillEditorGUI extends JFrame {
             refreshSkillTable(skillManager.getSkills());
             currentSkill = null;
             clearEditor();
-            updateStatus("Skill deleted");
+            updateStatus(getMsg("status.deleted"));
         }
     }
     
@@ -831,9 +853,7 @@ public class SkillEditorGUI extends JFrame {
         if (selectedRow >= 0) {
             String name = (String) setsTableModel.getValueAt(selectedRow, 0);
             String value = (String) setsTableModel.getValueAt(selectedRow, 1);
-            
-            String newValue = JOptionPane.showInputDialog(this, 
-                "Edit value for " + name + ":", value);
+            String newValue = JOptionPane.showInputDialog(this, "Edit value for " + name + ":", value);
             if (newValue != null) {
                 setsTableModel.setValueAt(newValue, selectedRow, 1);
             }
@@ -859,7 +879,6 @@ public class SkillEditorGUI extends JFrame {
         if (selectedRow >= 0) {
             String name = (String) tablesTableModel.getValueAt(selectedRow, 0);
             String values = (String) tablesTableModel.getValueAt(selectedRow, 1);
-            
             String newValues = JOptionPane.showInputDialog(this, 
                 "Edit values for " + name + " (space-separated):", values);
             if (newValues != null) {
@@ -883,31 +902,31 @@ public class SkillEditorGUI extends JFrame {
     }
     
     private void validateSkills() {
-        StringBuilder report = new StringBuilder("Validation Report:\n\n");
+        StringBuilder report = new StringBuilder(getMsg("validation.title") + "\n\n");
         int errors = 0;
         
         for (Skill skill : skillManager.getSkills()) {
             if (skill.getSkillId() <= 0) {
-                report.append("❌ Invalid ID: ").append(skill).append("\n");
+                report.append(getMsg("validation.invalidID") + " " + skill).append("\n");
                 errors++;
             }
             if (skill.getName() == null || skill.getName().trim().isEmpty()) {
-                report.append("❌ Empty name for ID: ").append(skill.getSkillId()).append("\n");
+                report.append(getMsg("validation.emptyName") + " " + skill.getSkillId()).append("\n");
                 errors++;
             }
             if (skill.getLevels() <= 0) {
-                report.append("❌ Invalid levels for: ").append(skill).append("\n");
+                report.append(getMsg("validation.invalidLevels") + " " + skill).append("\n");
                 errors++;
             }
         }
         
         if (errors == 0) {
-            report.append("✅ All skills are valid!");
+            report.append(getMsg("validation.allValid"));
         } else {
-            report.append("\nFound ").append(errors).append(" error(s)");
+            report.append("\n" + getMsg("validation.errors") + " " + errors);
         }
         
-        JOptionPane.showMessageDialog(this, report.toString(), "Validation Result", 
+        JOptionPane.showMessageDialog(this, report.toString(), getMsg("validation.title"), 
             errors == 0 ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
     }
     
@@ -941,11 +960,11 @@ public class SkillEditorGUI extends JFrame {
                     );
                 }
                 
-                JOptionPane.showMessageDialog(this, "Export completed successfully!");
+                JOptionPane.showMessageDialog(this, getMsg("success.exported"));
                 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, 
-                    "Error exporting: " + ex.getMessage(), 
+                    getMsg("error.saveXML") + " " + ex.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
             }
         }

@@ -3,12 +3,11 @@ package com.lineage.tools;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class SkillTreeEditorGUI extends JFrame {
     
@@ -18,9 +17,9 @@ public class SkillTreeEditorGUI extends JFrame {
     private JComboBox<String> classSelector;
     private JTable skillTable;
     private DefaultTableModel tableModel;
-    private JTextField searchField;
     private SkillTreeClass currentClass;
     private SkillTreeEntry currentSkill;
+    private ResourceBundle messages;
     
     // Componentes do editor
     private JTextField txtSkillId, txtSkillName, txtSkillLevel;
@@ -29,6 +28,12 @@ public class SkillTreeEditorGUI extends JFrame {
     private JLabel lblClassId, lblParentClassId;
     
     public SkillTreeEditorGUI() {
+        this(Locale.ENGLISH);
+    }
+    
+    public SkillTreeEditorGUI(Locale locale) {
+        messages = ResourceBundle.getBundle("Messages", locale);
+        
         try {
             UIManager.setLookAndFeel(new FlatMacDarkLaf());
         } catch (Exception ex) {
@@ -39,26 +44,33 @@ public class SkillTreeEditorGUI extends JFrame {
         initComponents();
     }
     
+    private String getMsg(String key) {
+        try {
+            return messages.getString(key);
+        } catch (Exception e) {
+            return key;
+        }
+    }
+    
     private void initComponents() {
-        setTitle("Lineage Skill Tree Editor");
+        setTitle(getMsg("tree.title"));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(1200, 700);
         setLocationRelativeTo(null);
         
         // Menu
         JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
+        JMenu fileMenu = new JMenu(getMsg("menu.file"));
         
-        JMenuItem openItem = new JMenuItem("Open Skill Tree");
+        JMenuItem openItem = new JMenuItem(getMsg("menu.file.open"));
         openItem.addActionListener(e -> loadXml());
-        
-        JMenuItem saveItem = new JMenuItem("Save Skill Tree");
-        saveItem.addActionListener(e -> saveXml());
-        
         fileMenu.add(openItem);
+        
+        JMenuItem saveItem = new JMenuItem(getMsg("menu.file.save"));
+        saveItem.addActionListener(e -> saveXml());
         fileMenu.add(saveItem);
         fileMenu.addSeparator();
-        fileMenu.add(new JMenuItem("Close")).addActionListener(e -> dispose());
+        fileMenu.add(new JMenuItem(getMsg("menu.file.close"))).addActionListener(e -> dispose());
         
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
@@ -69,24 +81,31 @@ public class SkillTreeEditorGUI extends JFrame {
         
         // ===== PAINEL ESQUERDO =====
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setBorder(BorderFactory.createTitledBorder("Skill Tree"));
+        leftPanel.setBorder(BorderFactory.createTitledBorder(getMsg("tree.panel.skills")));
         
         // Painel de seleção de classe
         JPanel classPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        classPanel.add(new JLabel("Class: "));
+        classPanel.add(new JLabel(getMsg("tree.label.class") + ": "));
         classSelector = new JComboBox<>();
         classSelector.setPreferredSize(new Dimension(200, 25));
         classSelector.addActionListener(e -> loadSelectedClass());
         classPanel.add(classSelector);
         
-        JButton btnRefresh = new JButton("Refresh");
+        JButton btnRefresh = new JButton(getMsg("tree.button.refresh"));
         btnRefresh.addActionListener(e -> loadSelectedClass());
         classPanel.add(btnRefresh);
         
         leftPanel.add(classPanel, BorderLayout.NORTH);
         
         // Tabela de skills
-        String[] columns = {"Skill Name", "ID", "Level", "Get Level", "SP", "NPC"};
+        String[] columns = {
+            getMsg("tree.table.skillName"),
+            getMsg("tree.table.id"),
+            getMsg("tree.table.level"),
+            getMsg("tree.table.getLevel"),
+            getMsg("tree.table.sp"),
+            getMsg("tree.table.npc")
+        };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -107,13 +126,13 @@ public class SkillTreeEditorGUI extends JFrame {
         
         // Botões de ação
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton btnAdd = new JButton("Add Skill");
+        JButton btnAdd = new JButton(getMsg("tree.button.add"));
         btnAdd.addActionListener(e -> addSkill());
         
-        JButton btnClone = new JButton("Clone");
+        JButton btnClone = new JButton(getMsg("tree.button.clone"));
         btnClone.addActionListener(e -> cloneSkill());
         
-        JButton btnDelete = new JButton("Delete");
+        JButton btnDelete = new JButton(getMsg("tree.button.delete"));
         btnDelete.addActionListener(e -> deleteSkill());
         
         buttonPanel.add(btnAdd);
@@ -125,21 +144,21 @@ public class SkillTreeEditorGUI extends JFrame {
         
         // ===== PAINEL DIREITO =====
         JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBorder(BorderFactory.createTitledBorder("Skill Details"));
+        rightPanel.setBorder(BorderFactory.createTitledBorder(getMsg("tree.panel.details")));
         
         // Painel de informações da classe
         JPanel classInfoPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        classInfoPanel.setBorder(BorderFactory.createTitledBorder("Class Info"));
-        classInfoPanel.add(new JLabel("Class ID:"));
+        classInfoPanel.setBorder(BorderFactory.createTitledBorder(getMsg("tree.panel.classInfo")));
+        classInfoPanel.add(new JLabel(getMsg("tree.label.classId") + ":"));
         lblClassId = new JLabel("-");
         classInfoPanel.add(lblClassId);
-        classInfoPanel.add(new JLabel("Parent Class ID:"));
+        classInfoPanel.add(new JLabel(getMsg("tree.label.parentClassId") + ":"));
         lblParentClassId = new JLabel("-");
         classInfoPanel.add(lblParentClassId);
         
         // Painel de edição da skill
         JPanel editPanel = new JPanel(new GridBagLayout());
-        editPanel.setBorder(BorderFactory.createTitledBorder("Skill Editor"));
+        editPanel.setBorder(BorderFactory.createTitledBorder(getMsg("tree.panel.editor")));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -147,42 +166,42 @@ public class SkillTreeEditorGUI extends JFrame {
         int row = 0;
         
         gbc.gridx = 0; gbc.gridy = row;
-        editPanel.add(new JLabel("Skill ID:"), gbc);
+        editPanel.add(new JLabel(getMsg("tree.label.skillId") + ":"), gbc);
         gbc.gridx = 1;
         txtSkillId = new JTextField(15);
         editPanel.add(txtSkillId, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        editPanel.add(new JLabel("Skill Name:"), gbc);
+        editPanel.add(new JLabel(getMsg("tree.label.skillName") + ":"), gbc);
         gbc.gridx = 1;
         txtSkillName = new JTextField(15);
         editPanel.add(txtSkillName, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        editPanel.add(new JLabel("Skill Level:"), gbc);
+        editPanel.add(new JLabel(getMsg("tree.label.skillLevel") + ":"), gbc);
         gbc.gridx = 1;
         txtSkillLevel = new JTextField(15);
         editPanel.add(txtSkillLevel, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        editPanel.add(new JLabel("Get Level:"), gbc);
+        editPanel.add(new JLabel(getMsg("tree.label.getLevel") + ":"), gbc);
         gbc.gridx = 1;
         txtGetLevel = new JTextField(15);
         editPanel.add(txtGetLevel, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        editPanel.add(new JLabel("Level Up SP:"), gbc);
+        editPanel.add(new JLabel(getMsg("tree.label.sp") + ":"), gbc);
         gbc.gridx = 1;
         txtLevelUpSp = new JTextField(15);
         editPanel.add(txtLevelUpSp, gbc);
         row++;
         
         gbc.gridx = 0; gbc.gridy = row;
-        editPanel.add(new JLabel("Learned by NPC:"), gbc);
+        editPanel.add(new JLabel(getMsg("tree.label.npc") + ":"), gbc);
         gbc.gridx = 1;
         chkLearnedByNpc = new JCheckBox();
         editPanel.add(chkLearnedByNpc, gbc);
@@ -191,7 +210,7 @@ public class SkillTreeEditorGUI extends JFrame {
         // Botão Save
         gbc.gridx = 0; gbc.gridy = row;
         gbc.gridwidth = 2;
-        JButton btnSave = new JButton("Save Changes");
+        JButton btnSave = new JButton(getMsg("tree.button.save"));
         btnSave.setFont(btnSave.getFont().deriveFont(Font.BOLD, 14));
         btnSave.setPreferredSize(new Dimension(200, 35));
         btnSave.addActionListener(e -> saveSkillChanges());
@@ -210,7 +229,7 @@ public class SkillTreeEditorGUI extends JFrame {
         // Status bar
         JPanel statusBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
         statusBar.setBorder(BorderFactory.createEtchedBorder());
-        statusBar.add(new JLabel("Ready"));
+        statusBar.add(new JLabel(getMsg("tree.status.ready")));
         add(statusBar, BorderLayout.SOUTH);
     }
     
@@ -224,10 +243,10 @@ public class SkillTreeEditorGUI extends JFrame {
                 treeManager.loadFromFile(file);
                 updateClassSelector();
                 JOptionPane.showMessageDialog(this, 
-                    "Loaded " + treeManager.getClassTrees().size() + " class trees!");
+                    getMsg("tree.success.loaded") + " " + treeManager.getClassTrees().size());
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, 
-                    "Error loading XML: " + ex.getMessage(), 
+                    getMsg("tree.error.load") + " " + ex.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -236,7 +255,7 @@ public class SkillTreeEditorGUI extends JFrame {
     
     private void saveXml() {
         if (treeManager.getClassTrees().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No data to save!");
+            JOptionPane.showMessageDialog(this, getMsg("tree.error.noData"));
             return;
         }
         
@@ -248,10 +267,10 @@ public class SkillTreeEditorGUI extends JFrame {
                     file = new File(file.getAbsolutePath() + ".xml");
                 }
                 treeManager.saveToFile(file);
-                JOptionPane.showMessageDialog(this, "XML saved successfully!");
+                JOptionPane.showMessageDialog(this, getMsg("tree.success.saved"));
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, 
-                    "Error saving XML: " + ex.getMessage(), 
+                    getMsg("tree.error.save") + " " + ex.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -260,7 +279,8 @@ public class SkillTreeEditorGUI extends JFrame {
     private void updateClassSelector() {
         classSelector.removeAllItems();
         for (SkillTreeClass treeClass : treeManager.getClassTrees()) {
-            classSelector.addItem("Class " + treeClass.getClassId() + " (" + treeClass.getType() + ")");
+            classSelector.addItem(getMsg("tree.class") + " " + treeClass.getClassId() + 
+                " (" + treeClass.getType() + ")");
         }
         if (classSelector.getItemCount() > 0) {
             classSelector.setSelectedIndex(0);
@@ -274,11 +294,9 @@ public class SkillTreeEditorGUI extends JFrame {
         
         currentClass = treeManager.getClassTrees().get(index);
         
-        // Atualizar info da classe
         lblClassId.setText(String.valueOf(currentClass.getClassId()));
         lblParentClassId.setText(String.valueOf(currentClass.getParentClassId()));
         
-        // Atualizar tabela
         refreshSkillTable(currentClass.getSkills());
     }
     
@@ -291,7 +309,7 @@ public class SkillTreeEditorGUI extends JFrame {
                 skill.getSkillLevel(),
                 skill.getGetLevel(),
                 skill.getLevelUpSp(),
-                skill.isLearnedByNpc() ? "Yes" : "No"
+                skill.isLearnedByNpc() ? getMsg("tree.yes") : getMsg("tree.no")
             });
         }
     }
@@ -313,7 +331,7 @@ public class SkillTreeEditorGUI extends JFrame {
     
     private void saveSkillChanges() {
         if (currentSkill == null || currentClass == null) {
-            JOptionPane.showMessageDialog(this, "No skill selected!");
+            JOptionPane.showMessageDialog(this, getMsg("tree.error.noSkill"));
             return;
         }
         
@@ -326,9 +344,9 @@ public class SkillTreeEditorGUI extends JFrame {
             currentSkill.setLearnedByNpc(chkLearnedByNpc.isSelected());
             
             refreshSkillTable(currentClass.getSkills());
-            JOptionPane.showMessageDialog(this, "Skill updated!");
+            JOptionPane.showMessageDialog(this, getMsg("tree.success.updated"));
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid number format!");
+            JOptionPane.showMessageDialog(this, getMsg("tree.error.invalidNumber"));
         }
     }
     
@@ -336,7 +354,7 @@ public class SkillTreeEditorGUI extends JFrame {
         if (currentClass == null) return;
         
         SkillTreeEntry newSkill = new SkillTreeEntry();
-        newSkill.setSkillName("New Skill");
+        newSkill.setSkillName(getMsg("tree.newSkill"));
         newSkill.setSkillId(0);
         newSkill.setSkillLevel(1);
         newSkill.setGetLevel(1);
@@ -346,7 +364,6 @@ public class SkillTreeEditorGUI extends JFrame {
         currentClass.addSkill(newSkill);
         refreshSkillTable(currentClass.getSkills());
         
-        // Selecionar a nova skill
         int lastRow = tableModel.getRowCount() - 1;
         if (lastRow >= 0) {
             skillTable.setRowSelectionInterval(lastRow, lastRow);
@@ -372,8 +389,8 @@ public class SkillTreeEditorGUI extends JFrame {
         if (currentSkill == null || currentClass == null) return;
         
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Delete this skill?",
-            "Confirm Delete",
+            getMsg("tree.confirm.delete"),
+            getMsg("tree.confirm.title"),
             JOptionPane.YES_NO_OPTION);
             
         if (confirm == JOptionPane.YES_OPTION) {
@@ -391,17 +408,5 @@ public class SkillTreeEditorGUI extends JFrame {
         txtLevelUpSp.setText("");
         chkLearnedByNpc.setSelected(false);
         currentSkill = null;
-    }
-    
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(new FlatMacDarkLaf());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        
-        SwingUtilities.invokeLater(() -> {
-            new SkillTreeEditorGUI().setVisible(true);
-        });
     }
 }
