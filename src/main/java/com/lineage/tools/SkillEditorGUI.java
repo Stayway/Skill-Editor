@@ -38,10 +38,16 @@ public class SkillEditorGUI extends JFrame {
 	private final Locale[] supportedLocales = {
     Locale.ENGLISH,
     Locale.of("pt", "PT"),  // New method in Java 19+
-    Locale.of("es", "ES")   // New method in Java 19+
+    Locale.of("es", "ES"),   // New method in Java 19+
+    Locale.of("fr", "FR"),   // New method in Java 19+
+    Locale.of("de", "DE"),
+    Locale.of("ro", "RO"),   // New method in Java 19+
+    Locale.of("ja", "JA"),   // New method in Java 19+
+    Locale.of("ru", "RU"),   // New method in Java 19+
+    Locale.of("el", "EL")   // New method in Java 19+
 	};
     
-    private final String[] languageNames = {"English", "Português", "Español"};
+    private final String[] languageNames = {"English", "Português", "Español"," Deutsch",  "Français", "Română", "日本語", "Русский", "Ελληνικά"};
     
     // Components that need to be updated with the language.
     private JMenuBar menuBar;
