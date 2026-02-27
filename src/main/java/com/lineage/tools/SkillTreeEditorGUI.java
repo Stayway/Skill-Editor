@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+@SuppressWarnings("unused")
 public class SkillTreeEditorGUI extends JFrame {
     
     private static final long serialVersionUID = 1L;
