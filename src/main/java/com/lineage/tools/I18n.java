@@ -9,12 +9,12 @@ public class I18n {
     private INIParser currentIni;
     private Locale currentLocale;
     
-    // Temas disponíveis
+    // Available themes
     public enum Theme {
         DARK, LIGHT, SYSTEM
     }
     
-    // Idiomas disponíveis
+    // Available languages
     public enum Language {
         ENGLISH(Locale.ENGLISH, "en"),
         @SuppressWarnings("deprecation")
@@ -95,7 +95,7 @@ public class I18n {
         }
     }
     
-    // Métodos de conveniência para seções específicas
+    // Convenience methods for specific sections
     
     public String getMenu(String key) {
         return getString("Menu", key);
