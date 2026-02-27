@@ -62,7 +62,7 @@ public class SkillEditorGUI extends JFrame {
     Locale.of("pt", "PT"),  // New method in Java 19+
     Locale.of("es", "ES"),   // New method in Java 19+
     Locale.of("fr", "FR"),   // New method in Java 19+
-    Locale.of("de", "DE"),
+    Locale.of("de", "DE"),	// New method in Java 19+
     Locale.of("ro", "RO"),   // New method in Java 19+
     Locale.of("ja", "JA"),   // New method in Java 19+
     Locale.of("ru", "RU"),   // New method in Java 19+
