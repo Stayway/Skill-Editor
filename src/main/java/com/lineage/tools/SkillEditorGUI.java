@@ -39,12 +39,15 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 
 @SuppressWarnings("unused")
 public class SkillEditorGUI extends JFrame {
     
     private static final long serialVersionUID = 1L;
-    
+    private static final String PREF_LAST_DIR = "lastDirectory";
+    private Preferences prefs;    
+ 
     private SkillManager skillManager;
     private JTable skillTable;
     private DefaultTableModel tableModel;
@@ -92,7 +95,11 @@ public class SkillEditorGUI extends JFrame {
     private JTextArea conditionsArea;
     
     public SkillEditorGUI() {
-        // Default Language English
+ 
+        // Inicializar preferências
+        prefs = Preferences.userNodeForPackage(SkillEditorGUI.class);  	
+    	
+    	// Default Language English
         setLanguage(Locale.ENGLISH);
         
         // Apply dark theme by default
@@ -651,10 +658,18 @@ public class SkillEditorGUI extends JFrame {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XML files", "xml"));
         
+        // Recuperar o último diretório usado
+        String lastDir = prefs.get(PREF_LAST_DIR, null);
+        if (lastDir != null) {
+            fileChooser.setCurrentDirectory(new File(lastDir));
+        }
+        
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 File file = fileChooser.getSelectedFile();
-                skillManager.loadFromFile(file);
+                // Salvar o diretório atual para a próxima vez
+                prefs.put(PREF_LAST_DIR, file.getParent());
+                 skillManager.loadFromFile(file);
                 refreshSkillTable(skillManager.getSkills());
                 JOptionPane.showMessageDialog(this, 
                     getMsg("success.loaded") + " " + skillManager.getSkills().size() + " skills");
@@ -677,6 +692,11 @@ public class SkillEditorGUI extends JFrame {
         
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XML files", "xml"));
+        // Recuperar o último diretório usado
+        String lastDir = prefs.get(PREF_LAST_DIR, null);
+        if (lastDir != null) {
+            fileChooser.setCurrentDirectory(new File(lastDir));
+        }
         
         if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
@@ -684,6 +704,8 @@ public class SkillEditorGUI extends JFrame {
                 if (!file.getName().toLowerCase().endsWith(".xml")) {
                     file = new File(file.getAbsolutePath() + ".xml");
                 }
+                // Salvar o diretório atual para a próxima vez
+                prefs.put(PREF_LAST_DIR, file.getParent());
                 skillManager.saveToFile(file);
                 JOptionPane.showMessageDialog(this, getMsg("success.saved"));
                 updateStatus(getMsg("status.saved") + " " + file.getName());
